@@ -1,5 +1,12 @@
 // background.js
 
+// Обработчик сообщений от content.js
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "openChat") {
+        chrome.tabs.create({ url: chrome.runtime.getURL('chat.html') });
+    }
+});
+
 chrome.runtime.onInstalled.addListener(() => {
     chrome.contextMenus.create({
         id: "summarize-page",
@@ -11,7 +18,6 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.contextMenus.onClicked.addListener((info, tab) => {
     if (info.menuItemId !== "summarize-page") return;
 
-    // Показываем индикатор НАПРЯМУЮ (гарантированно работает)
     showIndicatorOnPage(tab.id, "Короче! Думаю...");
 
     chrome.scripting.executeScript({
@@ -94,7 +100,7 @@ async function summarizeWithGemini(text, tabId) {
 
     try {
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`,
+            `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, // ← ИСПРАВЛЕНО: убраны пробелы
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -121,10 +127,8 @@ async function summarizeWithGemini(text, tabId) {
             func: () => !!window.__gemini_content_script_loaded
         }, (results) => {
             if (results?.[0]?.result) {
-                // content.js загружен — можно отправлять сообщение
                 chrome.tabs.sendMessage(tabId, { action: "showSummary", summary });
             } else {
-                // Если не загружен — показываем через executeScript
                 showSummaryDirectly(tabId, summary);
             }
         });
@@ -132,7 +136,7 @@ async function summarizeWithGemini(text, tabId) {
     } catch (error) {
         console.error("Ошибка Gemini:", error);
         let msg = error.message || "Неизвестная ошибка";
-        showErrorOnPage(tab.id, `Gemini: ${msg.substring(0, 50)}`);
+        showErrorOnPage(tabId, `Gemini: ${msg.substring(0, 50)}`); // ← ИСПРАВЛЕНО: tabId вместо tab.id
     }
 }
 
