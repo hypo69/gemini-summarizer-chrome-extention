@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Короче!",
+  "version": "1.0",
+  "description": "Создаёт краткое резюме страницы с помощью Google Gemini",
+
+  "permissions": [
+    "contextMenus",
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+
+  "host_permissions": [
+    "https://generativelanguage.googleapis.com/*"
+  ],
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
